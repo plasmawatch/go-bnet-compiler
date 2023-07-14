@@ -116,6 +116,33 @@ func generateServiceFile(gen *protogen.Plugin, file *protogen.File, g *protogen.
 		g.P()
 		g.P("// ", service.GoName, "Method is the method id for ", service.Desc.FullName())
 		g.P("type ", service.GoName, "Method uint32")
+		g.P()
+
+		g.P("// Enum value maps for ", service.GoName, "Method.")
+		g.P("const (")
+		for _, method := range service.Methods {
+			if method.Desc.Options() != nil {
+				if method.Desc.Options().ProtoReflect().Has(bnet.E_MethodId.TypeDescriptor()) {
+					name := method.Desc.Options().ProtoReflect().Get(bnet.E_MethodId.TypeDescriptor()).Uint()
+
+					g.P("// ", service.GoName, "Method_", method.GoName, " ", service.GoName, "Method = ", name, " // ", method.Desc.FullName())
+					g.P(service.GoName, "Method_", method.GoName, " ", service.GoName, "Method = ", name, " // ", method.Desc.FullName())
+				}
+			} else {
+				g.P("// ", method.GoName, " does not have a method id")
+			}
+		}
+		g.P(")")
+
+		g.P()
+
+		// convert to uint32
+		g.P("// ToUint32 converts a ", service.GoName, "Method enum to a uint32")
+		g.P("func (m ", service.GoName, "Method) ToUint32() uint32 {")
+		g.P("return uint32(m)")
+		g.P("}")
+		g.P()
+
 		// create a function to get the method name from the method id
 		g.P("// GetMethodFullName returns the method full name for the given method id")
 		g.P("func (m ", service.GoName, "Method) GetMethodFullName() string {")
